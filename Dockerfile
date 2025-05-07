@@ -1,7 +1,9 @@
 FROM ubuntu:24.10
 
-# set the github runner version
+ARG RUNNER_DOWNLOAD_BASE_URL="https://github.com/actions/runner/releases/download"
+ARG RUNNER_ARCH="arm64"
 ARG RUNNER_VERSION="2.323.0"
+ARG RUNNER_TAR="actions-runner-linux-${RUNNER_ARCH}-${RUNNER_VERSION}.tar.gz"
 
 RUN apt-get update -y \
  && apt-get upgrade -y \
@@ -11,7 +13,7 @@ RUN apt-get update -y \
     curl \
     jq \
     libffi-dev \
-    libicu \
+    libicu-dev \
     libssl-dev \
     python3 \
     python3-dev \
@@ -23,9 +25,9 @@ RUN useradd -m docker
 RUN mkdir -p /home/docker/actions-runner
 
 RUN cd /home/docker/actions-runner \
- && curl -O -L https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz \
- && tar xzf ./actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz \
- && rm ./actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz
+ && curl -O -L "${RUNNER_DOWNLOAD_BASE_URL}/v${RUNNER_VERSION}/${RUNNER_TAR}" \
+ && tar xzf "./${RUNNER_TAR}" \
+ && rm "./${RUNNER_TAR}"
 
 # install some additional dependencies
 RUN chown -R docker ~docker \
