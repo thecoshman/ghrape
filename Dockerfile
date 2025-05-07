@@ -11,7 +11,7 @@ RUN apt-get update -y \
     curl \
     jq \
     libffi-dev \
-    libicu63 \
+    libicu \
     libssl-dev \
     python3 \
     python3-dev \
