@@ -30,12 +30,12 @@ RUN cd /home/docker/actions-runner \
 RUN chown -R docker ~docker \
  && /home/docker/actions-runner/bin/installdependencies.sh
 
+WORKDIR /home/docker/actions-runner
+
 COPY start.sh start.sh
 
 RUN chmod +x start.sh
 
 USER docker
-
-WORKDIR /home/docker/actions-runner
 
 ENTRYPOINT ["./start.sh"]
