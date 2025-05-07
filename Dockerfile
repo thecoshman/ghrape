@@ -1,4 +1,4 @@
-FROM ubuntu:24.10
+FROM debian:12.10-slim
 
 ARG RUNNER_DOWNLOAD_BASE_URL="https://github.com/actions/runner/releases/download"
 ARG RUNNER_ARCH="arm64"
