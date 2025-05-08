@@ -13,6 +13,7 @@ Are you looking for:
 * for private repositories
 * and you are happy _not_ sharing runners across repos
 * and happy with a 'fixed' number of runners per repo
+
 Then this _might_ just be a solution for you.
 If you are looking for something more complex, like auto-scaling, you sadly might need to keep up with the hunt, or raise an issue!
 
