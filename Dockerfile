@@ -10,7 +10,9 @@ RUN apt-get update -y \
  && apt-get clean autoclean \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     build-essential \
+    ca-certificates \
     curl \
+    git \
     jq \
     libffi-dev \
     libicu-dev \
@@ -20,25 +22,43 @@ RUN apt-get update -y \
     python3-pip \
     python3-venv
 
-RUN useradd -m docker
+RUN install -m 0755 -d /etc/apt/keyrings
 
-RUN mkdir -p /home/docker/actions-runner
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
 
-RUN cd /home/docker/actions-runner \
+RUN chmod a+r /etc/apt/keyrings/docker.asc
+
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+  | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+RUN apt-get update -y \
+ && apt-get upgrade -y \
+ && apt-get clean autoclean \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    containerd.io \
+    docker-buildx-plugin \
+    docker-ce \
+    docker-ce-cli \
+    docker-compose-plugin
+
+RUN useradd -m runningman
+
+RUN mkdir -p /home/runningman/actions-runner
+
+RUN cd /home/runningman/actions-runner \
  && curl -O -L "${RUNNER_DOWNLOAD_BASE_URL}/v${RUNNER_VERSION}/${RUNNER_TAR}" \
  && tar xzf "./${RUNNER_TAR}" \
  && rm "./${RUNNER_TAR}"
 
-# install some additional dependencies
-RUN chown -R docker ~docker \
- && /home/docker/actions-runner/bin/installdependencies.sh
+RUN chown -R runningman ~runningman \
+ && /home/runningman/actions-runner/bin/installdependencies.sh
 
-WORKDIR /home/docker/actions-runner
+WORKDIR /home/runningman/actions-runner
 
 COPY start.sh start.sh
 
 RUN chmod +x start.sh
 
-USER docker
+USER runningman
 
 ENTRYPOINT ["./start.sh"]
