@@ -36,6 +36,11 @@ The container requires three environment variables as described:
 
 See the GitHub API docs for more information about the [registration](https://docs.github.com/en/rest/actions/self-hosted-runners?apiVersion=2022-11-28#create-a-registration-token-for-a-repository) and [removal](https://docs.github.com/en/rest/actions/self-hosted-runners?apiVersion=2022-11-28#create-a-remove-token-for-a-repository) API calls that are made.
 
+Note that below examples have a volume mount for `docker.sock`, this allows the runners to perform docker based operations.
+If you do not want this, I believe you can simply not use the volume mount, and whilst docker is installed, it can't be used. 
+You might find you permission denied errors, which can be solved by running (on your host machine) `sudo chmod 666 /var/run/docker.sock`, as described [here](https://devopscube.com/run-docker-in-docker/).
+Further, as described on that page, you likely also need to update `/etc/rc.local` so it is applied at system start up.
+
 ### Directly running a container
 
 You can directly run a single container from the image using the following example command:
@@ -46,7 +51,8 @@ docker run \
   --env GH_USER=thecoshman \
   --env GH_REPO=ghrape \
   --env GH_PAT=github_pat_123456 \
-  --name homelab_runners \
+  --volume /var/run/docker.sock:/var/run/docker.sock \
+  --name ghrape_runner \
   ghcr.io/thecoshman/ghrape:LATEST
 ```
 
@@ -66,6 +72,8 @@ services:
       - GH_USER=thecoshman
       - GH_REPO=ghrape
       - GH_PAT=github_pat_123456
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       mode: replicated
       replicas: 3
