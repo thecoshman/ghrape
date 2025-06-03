@@ -1,8 +1,8 @@
-FROM debian:12.10-slim
+FROM debian:12.11-slim
 
 ARG RUNNER_DOWNLOAD_BASE_URL="https://github.com/actions/runner/releases/download"
 ARG RUNNER_ARCH="arm64"
-ARG RUNNER_VERSION="2.323.0"
+ARG RUNNER_VERSION="2.325.0"
 ARG RUNNER_TAR="actions-runner-linux-${RUNNER_ARCH}-${RUNNER_VERSION}.tar.gz"
 
 RUN apt-get update -y \
@@ -62,3 +62,9 @@ RUN chmod +x start.sh
 USER runningman
 
 ENTRYPOINT ["./start.sh"]
+
+LABEL org.opencontainers.image.vendor="thecoshman" \
+    org.opencontainers.image.source="https://github.com/thecoshman/ghrape" \
+    org.opencontainers.image.title="Ghrape" \
+    org.opencontainers.image.description="ARM based runner for GHA" \
+    org.opencontainers.image.documentation="https://github.com/thecoshman/ghrape"

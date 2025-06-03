@@ -16,9 +16,7 @@ REGISTRAION_TOKEN=$(curl -L \
   "https://api.github.com/repos/${USER}/${REPO}/actions/runners/registration-token" \
    | jq .token --raw-output)
 echo "Retrieved runner registration token for github.com/${USER}/${REPO}"
-./config.sh --unattended --disableupdate --replace \
-  --url "https://github.com/${USER}/${REPO}" \
-  --token "${REGISTRAION_TOKEN}"
+./config.sh --unattended --replace --url "https://github.com/${USER}/${REPO}" --token "${REGISTRAION_TOKEN}"
 
 cleanup() {
     echo "Removing runner..."
