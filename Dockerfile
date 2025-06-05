@@ -41,25 +41,25 @@ RUN apt-get update -y \
     docker-ce-cli \
     docker-compose-plugin
 
-RUN useradd -m docker
+RUN useradd -m runningman
 
-RUN mkdir -p /home/docker/actions-runner
+RUN mkdir -p /home/runningman/actions-runner
 
-RUN cd /home/docker/actions-runner \
+RUN cd /home/runningman/actions-runner \
  && curl -O -L "${RUNNER_DOWNLOAD_BASE_URL}/v${RUNNER_VERSION}/${RUNNER_TAR}" \
  && tar xzf "./${RUNNER_TAR}" \
  && rm "./${RUNNER_TAR}"
 
-RUN chown -R docker ~docker \
- && /home/docker/actions-runner/bin/installdependencies.sh
+RUN chown -R runningman ~runningman \
+ && /home/runningman/actions-runner/bin/installdependencies.sh
 
-WORKDIR /home/docker/actions-runner
+WORKDIR /home/runningman/actions-runner
 
 COPY start.sh start.sh
 
 RUN chmod +x start.sh
 
-USER docker
+USER runningman
 
 ENTRYPOINT ["./start.sh"]
 
