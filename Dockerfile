@@ -43,6 +43,8 @@ RUN apt-get update -y \
 
 RUN useradd -m runningman
 
+RUN echo 'runningman ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
 RUN mkdir -p /home/runningman/actions-runner
 
 RUN cd /home/runningman/actions-runner \
