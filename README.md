@@ -36,12 +36,12 @@ The container requires three environment variables as described:
 
 See the GitHub API docs for more information about the [registration](https://docs.github.com/en/rest/actions/self-hosted-runners?apiVersion=2022-11-28#create-a-registration-token-for-a-repository) and [removal](https://docs.github.com/en/rest/actions/self-hosted-runners?apiVersion=2022-11-28#create-a-remove-token-for-a-repository) API calls that are made.
 
-Note that below examples have a volume mount for `docker.sock`, this allows the runners to perform docker based operations.
+Note that examples below have a volume mount for `docker.sock`, this allows the runners to perform docker based operations.
 If you do not want this, I believe you can simply not use the volume mount, and whilst docker is installed, it can't be used. 
 You might find you permission denied errors, which can be solved by running (on your host machine) `sudo chmod 666 /var/run/docker.sock`, as described [here](https://devopscube.com/run-docker-in-docker/).
 Further, as described on that page, you likely also need to update `/etc/rc.local` so it is applied at system start up.
 
-### Directly running a container
+### Directly running a container (mediocre solution)
 
 You can directly run a single container from the image using the following example command:
 
@@ -53,10 +53,10 @@ docker run \
   --env GH_PAT=github_pat_123456 \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   --name ghrape_runner \
-  ghcr.io/thecoshman/ghrape:LATEST
+  ghcr.io/thecoshman/ghrape:latest
 ```
 
-### Using Docker Compose
+### Using Docker Compose (recommended solution)
 
 The intention is that you use docker-compose to create a stack that will run N containers using the image.
 There's no auto-scaling here (yet?) you just need to define that the service is replicated with as many replicas as you wish.
@@ -66,7 +66,7 @@ Here is an example Docker compose that could be used to run three runners for th
 ```
 services:
   runners:
-    image: ghcr.io/thecoshman/ghrape:LATEST
+    image: ghcr.io/thecoshman/ghrape:latest
     restart: unless-stopped
     environment:
       - GH_USER=thecoshman
@@ -80,15 +80,25 @@ services:
 ```
 (Note: As this project is public, I just make use of the GitHub provided runners)
 
+## Image Versioning and Updating (Watchtower?)
+
+Each time the `main` branch is built, the resulting image is tagged with `latest` and the github runner code version, extracted form the `Dockerfile`, for example `2.235.0`.
+
+My intention/suggestion is that you only use the `latest` tag, as the runner code is self updating anyway.
+This means each time you pull the `latest` image, you are getting the most recent version of the code, reducing the 'catch up' that the runner needs to do.
+In theory, as the runner code self updates, you can get away with deploying containers once and letting them update for years.
+It's to be tested, but I believe using a utility, like Watchtower, would be a good idea, ensuring each time this image is updated, it's pulled and deployed for you locally.
+
 ## TODO
 
 Things I'm aware of and would like to fix/improve at some stage
 
-### Image Versioning
+### Auto-update!
 
-Right now, the only proper label that is applied to the image is `LATEST`.
-I want to look into either going with some sort of date based version for this image or combine the Debian base image with the runner version;
-The would give me something like `12.10-2.323.0` as the latest label.
+The `main` branch is automatically built and tagged with the runner version, extracted form the `Dockerfile`.
+I need to add a workflow that can frequently check what the latest version of the runner code is, and if newer than what is currently used, commit that, thus triggering a new image to be built.
+If I'm not mistaken, having a workflow commit code changes will prevent another workflow from triggering, so probably need to refactor the workflows a little bit.
+The `build-image` image workflow should be a re-usable one, that can be called either from a (none automated) push to main (a new workflow), or form the (yet to be implemented) version bump running.
 
 ### Review Debian packages
 
