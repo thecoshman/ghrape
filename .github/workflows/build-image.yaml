@@ -6,7 +6,20 @@ on:
       - main
 
 jobs:
+  version_extractor:
+    runs-on: "ubuntu-24.04-arm"
+    outputs:
+      runner_version: ${{ steps.extractor.outputs.runner_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract runner version
+        id: extractor
+        run: echo "runner_version=$(cat Dockerfile | grep 'ARG RUNNER_VERSION' | cut -d '=' -f 2 | sed -e 's/"//g')" >> $GITHUB_OUTPUT
+
   build:
+    needs: version_extractor
     runs-on: "ubuntu-24.04-arm"
     permissions:
       contents: read
@@ -22,13 +35,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract runner version
-        run: echo "sha_short=$(cat Dockerfile | grep 'ARG RUNNER_VERSION' | cut -d '=' -f 2 | sed -e 's/"//g')" >> $GITHUB_OUTPUT
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/ghrape:latest
+          tags: ghcr.io/${{ github.repository_owner }}/ghrape:${{ needs.version_extractor.outputs.runner_version }},ghcr.io/${{ github.repository_owner }}/ghrape:latest
           provenance: false
