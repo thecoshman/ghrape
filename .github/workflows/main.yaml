@@ -1,0 +1,13 @@
+name: Main branch CI/CD
+
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'Dockerfile'
+      - 'start.sh'
+
+jobs:
+  build-image:
+    uses: ./.github/workflows/build-image.yaml

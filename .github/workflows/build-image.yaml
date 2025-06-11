@@ -1,9 +1,7 @@
-name: Build image
+name: Build and Push Docker image
 
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
 
 jobs:
   version_extractor:
