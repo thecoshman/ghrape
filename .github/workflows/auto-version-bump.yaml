@@ -1,0 +1,65 @@
+name: Check if image needs rebuilding for updates
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 4 * * *'
+
+jobs:
+  get-versions:
+    runs-on: ubuntu-24.04-arm
+    outputs:
+      current_version: ${{ steps.version_loader.outputs.current_version }}
+      latest_version: ${{ steps.version_finder.outputs.latest_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt-get install -y curl
+
+      - name: Read current GitHub runner version
+        id: version_loader
+        run: |
+          RUNNER_CURRENT_VERSION=$(cat Dockerfile | grep 'ARG RUNNER_VERSION' | cut -d '=' -f 2 | sed -e 's/"//g')
+          echo "[INFO] Current runner versions is ${RUNNER_CURRENT_VERSION}"
+          echo "current_version=${RUNNER_CURRENT_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Find latest GitHub runner version
+        id: version_finder
+        run: |
+          RUNNER_LATEST_URL=$(curl --head --silent --location --write-out '%{url_effective}' --output /dev/null 'https://github.com/actions/runner/releases/latest')
+          RUNNER_LATEST_VERSION="${RUNNER_LATEST_URL##*/v}"
+          echo "[INFO] Latest runner verison is ${RUNNER_LATEST_VERSION}"
+          echo "latest_version=${RUNNER_LATEST_VERSION}" >> "$GITHUB_OUTPUT"
+
+  commit-new-runner-version:
+    needs: get-versions
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Commit updated GitHub runner version number
+        if: ${{ needs.get-versions.outputs.latest_version != needs.get-versions.outputs.current_version }}
+        env:
+          CURRENT_VERSION: ${{ needs.get-versions.outputs.current_version }}
+          LATEST_VERSION: ${{ needs.get-versions.outputs.latest_version }}
+          COMMIT_EMAIL: ${{ secrets.GIT_COMMIT_EMAIL }}
+        run: |
+          git config user.name github-actions
+          git config user.email "${COMMIT_EMAIL}"
+          sed --in-place -e "s/ARG RUNNER_VERSION=\"${CURRENT_VERSION}\"/ARG RUNNER_VERSION=\"${LATEST_VERSION}\"/" Dockerfile
+          git add Dockerfile
+          git commit -m "[Atomated 🤖] Update to GH Runner version ${LATEST_VERSION}"
+          git push
+
+      - name: Skipping committing new runner version
+        if: ${{ needs.get-versions.outputs.latest_version == needs.get-versions.outputs.current_version }}
+        run: |
+          echo 'No new GH Runner version to commit'
+
+  build-image:
+    needs: commit-new-runner-version
+    if: ${{ needs.get-versions.outputs.latest_version != needs.get-versions.outputs.current_version }}
+    uses: ./.github/workflows/build-image.yaml

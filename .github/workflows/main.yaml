@@ -5,6 +5,7 @@ on:
     branches:
       - 'main'
     paths:
+      - '.github/workflows/build-image.yaml'
       - 'Dockerfile'
       - 'start.sh'
 
