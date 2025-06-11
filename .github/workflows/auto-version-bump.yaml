@@ -66,3 +66,5 @@ jobs:
       packages: write
     if: ${{ needs.get-versions.outputs.latest_version != needs.get-versions.outputs.current_version }}
     uses: ./.github/workflows/build-image.yaml
+    with:
+      pull_branch: true
