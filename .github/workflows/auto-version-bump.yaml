@@ -61,5 +61,8 @@ jobs:
 
   build-image:
     needs: commit-new-runner-version
+    permissions:
+      contents: read
+      packages: write
     if: ${{ needs.get-versions.outputs.latest_version != needs.get-versions.outputs.current_version }}
     uses: ./.github/workflows/build-image.yaml
