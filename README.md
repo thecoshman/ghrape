@@ -38,7 +38,7 @@ See the GitHub API docs for more information about the [registration](https://do
 
 Note that examples below have a volume mount for `docker.sock`, this allows the runners to perform docker based operations.
 If you do not want this, I believe you can simply not use the volume mount, and whilst docker is installed, it can't be used. 
-You might find you permission denied errors, which can be solved by running (on your host machine) `sudo chmod 666 /var/run/docker.sock`, as described [here](https://devopscube.com/run-docker-in-docker/).
+You might find you get permission denied errors, which can be solved by running (on your host machine) `sudo chmod 666 /var/run/docker.sock`, as described [here](https://devopscube.com/run-docker-in-docker/).
 Further, as described on that page, you likely also need to update `/etc/rc.local` so it is applied at system start up.
 
 ### Directly running a container (mediocre solution)
@@ -61,6 +61,7 @@ docker run \
 The intention is that you use docker-compose to create a stack that will run N containers using the image.
 There's no auto-scaling here (yet?) you just need to define that the service is replicated with as many replicas as you wish.
 Maybe I'll add auto-scaling, but for now, I just want to have a small pool of runners available.
+In my experience, each runner is low enough impact that I don't them just sitting idle.
 
 Here is an example Docker compose that could be used to run three runners for this repository:
 ```
@@ -93,12 +94,11 @@ It's to be tested, but I believe using a utility, like Watchtower, would be a go
 
 Things I'm aware of and would like to fix/improve at some stage
 
-### Auto-update!
+### Auto-update?
 
-The `main` branch is automatically built and tagged with the runner version, extracted form the `Dockerfile`.
-I need to add a workflow that can frequently check what the latest version of the runner code is, and if newer than what is currently used, commit that, thus triggering a new image to be built.
-If I'm not mistaken, having a workflow commit code changes will prevent another workflow from triggering, so probably need to refactor the workflows a little bit.
-The `build-image` image workflow should be a re-usable one, that can be called either from a (none automated) push to main (a new workflow), or form the (yet to be implemented) version bump running.
+The `main` branch is automatically built and tagged with the runner version, extracted form the `Dockerfile` and a workflow is checking daily for a new version of the runner code.
+This should be in place, but awaiting an update of the runner code to actually confirm this.
+With that in place, I will then also add an example compose file for using Watchtower, once I've played with this myself.
 
 ### Review Debian packages
 
@@ -109,6 +109,23 @@ I would guess I don't really need them all, so at some stage, I'd look to test r
 
 In the interest in reducing the final build image, I would suspect I could make use of multi-stage build to install tools required _purely_ for the build phase.
 Investigation required...
+
+### Dynamic packages and labels
+
+'But I want X installed too', yeah, right now, the list of packages directly installed is fairly minimal, and probably more than required.
+My intention is that an env arg can be provided to list Debian packages to install prior to starting the runner.
+To go with this, an env arg to provide additional labels.
+This would make it very easy to use this single image to bring up runners that have additional tools such as Java or C++ compilers.
+
+I might look to take this a bit further, if I ever need it myself (or someone actually wants it) to allow for things like Node packages.
+My thinking is that you can define a list of Node packages, and if set, node is installed and then the packages you want.
+
+In general, I want to try keep this image lightweight but flexible.
+
+### None Debian version?
+
+The Debian slim image used plus the software so far means the image is about 1.5GB. 
+Not the worst, but maybe alpine could be used to help reduce the size. 
 
 ### License
 
