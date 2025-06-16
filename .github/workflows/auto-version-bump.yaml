@@ -51,7 +51,7 @@ jobs:
           git config user.email "${COMMIT_EMAIL}"
           sed --in-place -e "s/ARG RUNNER_VERSION=\"${CURRENT_VERSION}\"/ARG RUNNER_VERSION=\"${LATEST_VERSION}\"/" Dockerfile
           git add Dockerfile
-          git commit -m "[Atomated 🤖] Update to GH Runner version ${LATEST_VERSION}"
+          git commit -m "[Automated 🤖] Update to GH Runner version ${LATEST_VERSION}"
           git push
 
       - name: Skipping committing new runner version
