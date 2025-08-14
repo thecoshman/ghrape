@@ -2,7 +2,7 @@ FROM debian:12.11-slim
 
 ARG RUNNER_DOWNLOAD_BASE_URL="https://github.com/actions/runner/releases/download"
 ARG RUNNER_ARCH="arm64"
-ARG RUNNER_VERSION="2.327.1"
+ARG RUNNER_VERSION="2.328.0"
 ARG RUNNER_TAR="actions-runner-linux-${RUNNER_ARCH}-${RUNNER_VERSION}.tar.gz"
 
 RUN apt-get update -y \
